@@ -1,0 +1,313 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type CafeMenuImage {
+  id: String!
+  menu_imageUrl: String!
+  cafeInform: CafeInform!
+}
+
+type CafeTag {
+  id: String!
+  tagName: String!
+  cafeInform: [CafeInform!]!
+}
+
+type CommentImage {
+  id: String!
+  image_url: String!
+  comment: Comment!
+}
+
+type Stamp {
+  id: String!
+  count: Int!
+  updatedAt: DateTime!
+  user: User!
+  cafeInform: CafeInform!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type PickList {
+  id: String!
+  user: User!
+  cafeInform: CafeInform!
+}
+
+type Coupon {
+  id: String!
+  expiredDate: String!
+  cafeInform: CafeInform!
+  user: User!
+}
+
+type User {
+  id: String!
+  name: String!
+  nickname: String!
+  email: String!
+  address: String!
+  detailAddress: String!
+  phone: String!
+  profileImage: String!
+}
+
+type Comment {
+  id: String!
+  reply: String!
+  like: Int!
+  time: DateTime!
+  user: User!
+  cafeinfo: CafeInform!
+  commentImage: [CommentImage!]!
+}
+
+type OwnerComment {
+  id: String!
+  content: String!
+  time: DateTime!
+  owner: Owner!
+  comment: Comment!
+  deletedAt: DateTime!
+}
+
+type Owner {
+  id: String!
+  name: String!
+  email: String!
+  phone: String!
+  is_main: Boolean!
+  is_cafeInform: Boolean!
+  ownerNum: String!
+  brandName: String!
+}
+
+type CafeInform {
+  id: String!
+  cafeinfo: String!
+  notice: String!
+  operatingInfo: String!
+  cafeAddr: String!
+  detailAddr: String!
+  like: Int!
+  thumbNail: String!
+  is_WC: Boolean!
+  is_Wifi: Boolean!
+  is_Parking: Boolean!
+  owner: Owner!
+  cafeTag: [CafeTag!]!
+  cafeImage: [CafeImage!]!
+  cafeMenuImage: [CafeMenuImage!]!
+}
+
+type CafeImage {
+  id: String!
+  cafe_image: String!
+  is_main: Boolean!
+  cafeInform: CafeInform!
+}
+
+type Category {
+  id: String!
+  category: String!
+}
+
+type DeletedCoupon {
+  id: String!
+  expired: Boolean!
+  expiredDate: String!
+  user: User!
+  cafeInform: CafeInform!
+}
+
+type StampHistory {
+  id: String!
+  count: Int!
+  user: User!
+  owner: Owner!
+  stamp: Stamp!
+  createdAt: DateTime!
+}
+
+type Query {
+  fetchCafeImage(cafeInformID: String!): [CafeImage!]!
+  fetchCafeInform(cafeInformID: String!): CafeInform!
+  fetchBestCafe: [CafeInform!]!
+  fetchCafeInforms(page: Int): [CafeInform!]!
+  fetchCafes(location: String, tags: [String!], page: Int): [CafeInform!]!
+  fetchMyCafes(page: Int): [CafeInform!]!
+  fetchCafesWithNameAndLocation(name: String, page: Int, location: String): [CafeInform!]!
+  fetchCafeMenuImage(CafeInformID: String!): [CafeMenuImage!]!
+  fetchCategory: [Category!]!
+  fetchComments(page: Int): [Comment!]!
+  fetchComment(commentId: String!): Comment!
+  fetchbestcomment: [Comment!]!
+  fetchUserComments(page: Int): [Comment!]!
+  fetchCommentsAll(location: String, tags: [String!], page: Int): [Comment!]!
+  fetchCommentBycafeID(cafeID: String!, page: Int): [Comment!]!
+  fetchCommentImages: [CommentImage!]!
+  fetchCommentImagesbyID(commentId: String!): [CommentImage!]!
+  fetchUserCoupons(page: Int): [Coupon!]!
+  fetchDeletedCoupon: [DeletedCoupon!]!
+  fetchOwners: [Owner!]!
+  fetchOwner(ownerID: String!): Owner!
+  fetchOwnerLoggedIn: Owner!
+  fetchOwnerComment(page: Int): [OwnerComment!]!
+  fetchMyOwnerComments(page: Int): [OwnerComment!]!
+  fetchOwnerCommentByCommentID(commentID: String!): String!
+  fetchMyPickLists(page: Int, Location: String): [PickList!]!
+  fetchStamp(stampId: String!): Stamp!
+  fetchStamps: [Stamp!]!
+  fetchUserStamps(location: String, page: Int): [Stamp!]!
+  fetchCafeStamps(cafeId: String!): [DateTime!]!
+  fetchUnusualStamps(page: Int): [StampHistory!]!
+  fetchUsers: [User!]!
+  fetchUser: User!
+  fetchCouponAddUsers(phone: String, page: Int): [User!]!
+}
+
+type Mutation {
+  deleteCafeImage(cafeImageID: String!): Boolean!
+  updateCafeInform(updateCafeInform: UpdateCafeInform!, cafeInformID: String!): CafeInform!
+  CreatecafeInform(cafeInformInput: CafeInformInput!): CafeInform!
+  PickCafe(cafeInformID: String!): Int!
+  deleteCafeInform(cafeInformID: String!): Boolean!
+  deleteCafeMenuImage(cafeMenuImageID: String!): Boolean!
+  createCategory(category: String!): Category!
+  deleteCategory(categoryId: String!): Boolean!
+  createComment(createCommentinput: createCommentInput!, cafeinformId: String!): Comment!
+  updateComment(commentId: String!, UpdateCommentInput: UpdateCommentInput!): Comment!
+  deleteComment(commentId: String!): String!
+  likeComment(commentID: String!): Int!
+  deleteCommentImage(commentImageID: String!): String!
+  useCoupon(couponId: String!, password: String!): DeletedCoupon!
+  uploadFile(files: [Upload!]!): [String!]!
+  uploadFileOne(file: Upload!): String!
+  CreateOwner(createOwnerInput: OwnerInput!): Owner!
+  deleteOwner: Boolean!
+  updateOwner(updateOwnerInput: OwnerUpdateInput!): Owner!
+  findOwnerPassword(email: String!): String!
+  sendTokenToOwnerEmail(email: String!): String!
+  sendTokenToSMS(phone: String!): String!
+  ownerLogin(email: String!, password: String!): String!
+  restoreOwnerAccessToken: String!
+  ownerLogout: String!
+  createOwnerComment(createOwnerCommentInput: CreateOwnerCommentInput!, commentID: String!): OwnerComment!
+  updateOwnerComment(UpdateOwnerCommentInput: UpdateOwnerCommentInput!, ownerCommentID: String!): OwnerComment!
+  createStamp(createStampInput: CreateStampInput!): Stamp!
+  deleteStamp(stampId: String!): String!
+  deleteUnusualStamp(ownerpassword: String!, stamphistoryId: String!): Int!
+  createUser(createUserInput: CreateUserInput!): User!
+  emailVerify(email: String!): String!
+  updateUser(updateUserInput: UpdateUserInput!): User!
+  deleteUser: Boolean!
+  findUserPwd(email: String!): String!
+  userLogin(email: String!, password: String!): String!
+  restoreAccessToken: String!
+  userLogout: String!
+}
+
+input UpdateCafeInform {
+  cafeinfo: String
+  operatingInfo: String
+  cafeAddr: String
+  detailAddr: String
+  notice: String
+  ownerNum: String
+  menu_imageUrl: [String!]
+  cafe_imageUrl: [String!]
+  cafeTag: [String!]
+  is_Parking: Boolean
+  is_WC: Boolean
+  is_Wifi: Boolean
+}
+
+input CafeInformInput {
+  cafeinfo: String!
+  operatingInfo: String!
+  cafeAddr: String!
+  notice: String!
+  detailAddr: String!
+  cafeTag: [String!]!
+  menu_imageUrl: [String!]!
+  cafe_imageUrl: [String!]!
+  is_Parking: Boolean!
+  is_WC: Boolean!
+  is_Wifi: Boolean!
+}
+
+input createCommentInput {
+  reply: String!
+  image_Url: [String!]
+}
+
+input UpdateCommentInput {
+  reply: String
+  image_Url: [String!]
+}
+
+"""The `Upload` scalar type represents a file upload."""
+scalar Upload
+
+input OwnerInput {
+  name: String!
+  email: String!
+  phone: String!
+  is_main: Boolean!
+  ownerNum: String!
+  password: String!
+  ownerPassword: String!
+  brandName: String!
+}
+
+input OwnerUpdateInput {
+  name: String
+  email: String
+  phone: String
+  is_main: Boolean
+  password: String
+  ownerPassword: String
+  ownerNum: String
+  brandName: String
+}
+
+input CreateOwnerCommentInput {
+  content: String!
+}
+
+input UpdateOwnerCommentInput {
+  content: String
+}
+
+input CreateStampInput {
+  phone: String!
+  cafeId: String!
+  count: Int!
+  password: String!
+}
+
+input CreateUserInput {
+  name: String!
+  nickname: String!
+  email: String!
+  address: String!
+  phone: String!
+  detailAddress: String
+  password: String!
+  profileImage: String
+}
+
+input UpdateUserInput {
+  email: String
+  nickname: String
+  address: String
+  detailAddress: String
+  phone: String
+  password: String
+  profileImage: String
+}

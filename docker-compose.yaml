@@ -1,0 +1,35 @@
+version: '3.7'
+
+services:
+  my-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./src:/myfolder/src
+    ports:
+      - 3000:3000
+    env_file:
+      - ./.env.docker
+
+  my-database:
+    image: mysql:latest
+    environment:
+      MYSQL_DATABASE: 'testDB'
+      MYSQL_ROOT_PASSWORD: 'root'
+    ports:
+      - 3306:3306
+
+  my-redis:
+    image: redis:latest
+    ports:
+      - 6379:6379
+
+  # nginx:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.nginx
+  #   volumes:
+  #     - ./nginx.default.conf:/etc/nginx/conf.d/default.conf
+  #   ports:
+  #     - 80:80
