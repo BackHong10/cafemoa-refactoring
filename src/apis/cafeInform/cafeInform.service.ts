@@ -355,28 +355,45 @@ export class CafeInformService {
   }
   async findCafeWithLocationAndTag({ Location, Tags, page }) {
     if (Location && Tags.length === 0) {
+      console.log("지역만")
       const result = await this.findCafeInformWithLocation({ Location, page });
       return result;
     } else if (!Location && Tags.length > 0) {
+      console.log("태그만")
       const result = await this.findCafeInformWithTags({ Tags, page });
 
       return result;
     } else if (Location && Tags.length > 0) {
-      const result = await this.cafeInformrRepository.find({
-        where: {
-          cafeTag:{
-            tagName: In(Tags)
-          },
-        },
-        
-        
-      })
-      return result
+      console.log("두개다")
+      return this.cafeInformrRepository
+      .createQueryBuilder('cafeInform')
+      .innerJoinAndSelect('cafeInform.cafeTag','cafeTag')
+      .innerJoinAndSelect('cafeInform.owner','owner')
+      .innerJoinAndSelect('cafeInform.cafeImage','cafeImage')
+      .innerJoinAndSelect('cafeInform.cafeMenuImage','cafeMenuImage')
+      .where('cafeTag.tagName In (:...Tags)',{Tags})
+      .andWhere('cafeInform.cafeAddr Like :Location OR cafeInform.detailAddr Like :Location',{Location : `%${Location}%`})
+      .take(10)
+      .skip((page-1) * 10)
+      .getMany()
     } else {
       const result = await this.findAll({ page });
       return result;
     }
   }
+
+  // async test(location,tags){
+  //   return this.cafeInformrRepository
+  //     .createQueryBuilder('cafeInform')
+  //     .innerJoinAndSelect('cafeInform.cafeTag','cafeTag')
+  //     .innerJoinAndSelect('cafeInform.owner','owner')
+  //     .innerJoinAndSelect('cafeInform.cafeImage','cafeImage')
+  //     .innerJoinAndSelect('cafeInform.cafeMenuImage','cafeMenuImage')
+  //     .where('cafeInform.cafeAddr Like :location',{location : `%${location}%`})
+  //     .orWhere('cafeInform.detailAddr Like :location',{location : `%${location}%`})
+  //     .andWhere('cafeTag.tagName In (:...tags)',{tags})
+  //     .getMany()
+  // }
 
   async findMyCafes({ ownerID, page }) {
     const result = await this.cafeInformrRepository.find({
@@ -412,26 +429,13 @@ export class CafeInformService {
       const result = await this.findCafeInformWithLocation({ Location, page });
       return result;
     } else if (name && Location) {
-      const result = await this.findCafeInformWithLocation({ Location, page });
-      const arr = result.filter((el) => el.owner.brandName.includes(name));
-      if (arr.length > 10) {
-        const pageNum = Math.ceil(arr.length / 10);
-        const result = new Array(pageNum);
-        for (let i = 0; i < pageNum; i++) {
-          result[i] = arr.slice(i * 10, (i + 1) * 10);
-        }
-        if (page > pageNum) {
-          return [];
-        } else {
-          return result[page - 1];
-        }
-      } else {
-        if (page > 1) {
-          return [];
-        } else {
-          return arr;
-        }
-      }
+      return this.cafeInformrRepository
+      .createQueryBuilder('cafeInform')
+      .innerJoinAndSelect('cafeInform.cafeTag','cafeTag')
+      .innerJoinAndSelect('cafeInform.owner','owner')
+      .innerJoinAndSelect('cafeInform.cafeImage','cafeImage')
+      .innerJoinAndSelect('cafeInform.cafeMenuImage','cafeMenuImage')
+
     } else {
       const result = await this.findAll({ page });
       return result;

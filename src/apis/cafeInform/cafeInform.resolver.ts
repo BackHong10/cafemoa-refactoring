@@ -110,4 +110,14 @@ export class CafeInformResolver {
   ) {
     return this.cafeInformService.findCafeByName({ name, page, Location });
   }
+
+  // @Query(() => [CafeInform])
+  // fetchTest(
+  //   @Args({ name: 'location', type: () => String, nullable: true })
+  //   location: string,
+  //   @Args({ name: 'tags', type: () => [String], nullable: true })
+  //   tags: string[],
+  // ){
+  //   return this.cafeInformService.test(location,tags)
+  // }
 }

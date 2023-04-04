@@ -3,7 +3,7 @@ import {
   Injectable,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { In, Repository } from 'typeorm';
+import { In, Like, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Comment } from './entities/comment.entity';
 import { CafeInform } from '../cafeInform/entities/cafeInform.entity';
@@ -14,6 +14,7 @@ import { LikeComment } from '../likeComment/entities/likecomment.entity';
 import { resourceLimits } from 'worker_threads';
 import { Stamp } from '../stamp/entities/stamp.entity';
 import { copyFile } from 'fs';
+import { throws } from 'assert';
 
 @Injectable()
 export class CommentService {
@@ -89,9 +90,7 @@ export class CommentService {
   async create({ createCommentInput, cafeinformId, userID }) {
     const { image_Url, ...Comment } = createCommentInput;
     const date = new Date();
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDay();
+    
 
     const resultUser = await this.userRepository.findOne({
       where: {
@@ -115,24 +114,22 @@ export class CommentService {
     });
 
     if (resultStamp) {
-      let dayS = String(resultStamp.updatedAt);
-      dayS = dayS.slice(0, 10);
-      let result = dayS.split('-');
-      if (Number(result[0]) < year) {
-        throw new ConflictException('댓글을 작성할 수 있는 기간이 지났습니다.');
-      } else if (Number(result[0]) === year) {
-        if (Number(result[1]) < month) {
-          throw new ConflictException(
-            '댓글을 작성할 수 있는 기간이 지났습니다.',
-          );
-        } else if (Number(result[1]) === month) {
-          if (Number(result[2]) + 3 < day) {
-            throw new ConflictException(
-              '댓글을 작성 할 수 있는 기간이 지났습니다.',
-            );
-          }
-        }
+      let date = new Date()
+      let year = String(date.getFullYear())
+      let month = String((date.getMonth()+1)).padStart(2,"0")
+      let day = String(date.getDate()+3).padStart(2,"0")
+      let nowDate = `${year}-${month}-${day}`
+
+      let updatedAt = resultStamp.updatedAt
+      let uYear = String(updatedAt.getFullYear())
+      let uMonth = String(updatedAt.getMonth()+1)
+      let uDay = String(updatedAt.getDate()+1)
+      let updateDate = `${uYear}-${uMonth}-${uDay}`
+
+      if(nowDate < updateDate){
+        throw new ConflictException('댓글을 쓸 수 있는 기간이 지났습니다.');
       }
+      
     } else {
       throw new ConflictException('해당 카페의 스탬프 기록이 없습니다.');
     }
@@ -228,17 +225,25 @@ export class CommentService {
         'commentImage',
         'cafeinfo.owner',
       ],
+      take: 5
     });
 
     if (Like[0].like < 5) {
       throw new ConflictException('해당하는 댓글이 없습니다.');
     } else {
-      return Like.slice(0, 3);
+      return Like
     }
   }
 
   async findcommentwithTags({ Tags, page }) {
     const result = await this.commentRepository.find({
+      where: {
+        cafeinfo: {
+          cafeTag: {
+            tagName: In(Tags)
+          }
+        }
+      },
       relations: [
         'cafeinfo',
         'cafeinfo.cafeTag',
@@ -249,43 +254,20 @@ export class CommentService {
       order: {
         time: 'DESC',
       },
+      take: 10,
+      skip: page === undefined ? 0 : (page-1) * 10
     });
-
-    const arr = [];
-    result.forEach((el) => {
-      el.cafeinfo.cafeTag.forEach((e) => {
-        for (let i = 0; i < Tags.length; i++) {
-          if (e.tagName === Tags[i]) {
-            if (arr.includes(el)) {
-              continue;
-            } else {
-              arr.push(el);
-            }
-          }
-        }
-      });
-    });
-    if (arr.length > 10) {
-      const pageNum = Math.ceil(arr.length / 10);
-      const result = new Array(pageNum);
-      for (let i = 0; i < pageNum; i++) {
-        result[i] = arr.slice(i * 10, (i + 1) * 10);
-      }
-      if (page > pageNum) {
-        return [];
-      } else {
-        return result[page - 1];
-      }
-    } else {
-      if (page > 1) {
-        return [];
-      } else {
-        return arr;
-      }
-    }
   }
   async findCommentWithLocation({ Location, page }) {
     const result = await this.commentRepository.find({
+      where:[
+        {cafeinfo :{
+          cafeAddr : Like(`%${Location}%`)
+        }},
+        {cafeinfo :{
+          detailAddr : Like(`%${Location}%`)
+        }}
+      ],
       relations: [
         'cafeinfo',
         'cafeinfo.cafeTag',
@@ -296,32 +278,10 @@ export class CommentService {
       order: {
         time: 'DESC',
       },
+      take: 10,
+      skip: page === undefined ? 0 : (page-1) * 10
     });
-    const answer = [];
-    for (let i = 0; i < result.length; i++) {
-      const str = result[i].cafeinfo.cafeAddr + result[i].cafeinfo.detailAddr;
-      if (str.includes(Location)) {
-        answer.push(result[i]);
-      }
-    }
-    if (answer.length > 10) {
-      const pageNum = Math.ceil(answer.length / 10);
-      const result = new Array(pageNum);
-      for (let i = 0; i < pageNum; i++) {
-        result[i] = answer.slice(i * 10, (i + 1) * 10);
-      }
-      if (page > pageNum) {
-        return [];
-      } else {
-        return result[page - 1];
-      }
-    } else {
-      if (page > 1) {
-        return [];
-      } else {
-        return answer;
-      }
-    }
+    
   }
 
   async findCommentWithLocationAndTag({ Location, Tags, page }) {
@@ -329,54 +289,18 @@ export class CommentService {
       const result = await this.findCommentWithLocation({ Location, page });
       return result;
     } else if (!Location && Tags.length > 0) {
-      const result = await this.commentRepository.find({
-        relations: [
-          'cafeinfo',
-          'cafeinfo.cafeTag',
-          'user',
-          'commentImage',
-          'cafeinfo.owner',
-        ],
-        order: {
-          time: 'DESC',
-        },
-      });
-
-      const arr = [];
-      result.forEach((el) => {
-        el.cafeinfo.cafeTag.forEach((e) => {
-          for (let i = 0; i < Tags.length; i++) {
-            if (e.tagName === Tags[i]) {
-              if (arr.includes(el)) {
-                continue;
-              } else {
-                arr.push(el);
-              }
-            }
-          }
-        });
-      });
-      if (arr.length > 10) {
-        const pageNum = Math.ceil(arr.length / 10);
-        const result = new Array(pageNum);
-        for (let i = 0; i < pageNum; i++) {
-          result[i] = arr.slice(i * 10, (i + 1) * 10);
-        }
-        if (page > pageNum) {
-          return [];
-        } else {
-          return result[page - 1];
-        }
-      } else {
-        if (page > 1) {
-          return [];
-        } else {
-          return arr;
-        }
-      }
+      const result = await this.findcommentwithTags({Tags,page})
+      return result
     } else if (Location && Tags.length > 0) {
-      const result = await this.findcommentwithTags({ page, Tags });
-      return result;
+      return this.commentRepository
+      .createQueryBuilder('comment')
+      .innerJoinAndSelect('comment.cafeinfo','cafeinfo')
+      .innerJoinAndSelect('cafeinfo.cafeTag','cafeTag')
+      .innerJoinAndSelect('comment.user','user')
+      .innerJoinAndSelect('comment.commentImage','commentImage')
+      .innerJoinAndSelect('cafeinfo.owner','owner')
+      .where('cafeTag.tagName In (:...Tags)',{Tags})
+      .andWhere('cafeinfo.cafeAddr Like:Location OR cafeinfo.detailAddr Like:Location',{Location : `%${Location}%`})
     } else {
       const result = await this.findAll({ page });
       return result;
