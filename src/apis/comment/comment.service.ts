@@ -257,6 +257,7 @@ export class CommentService {
       take: 10,
       skip: page === undefined ? 0 : (page-1) * 10
     });
+    return result
   }
   async findCommentWithLocation({ Location, page }) {
     const result = await this.commentRepository.find({
@@ -281,6 +282,7 @@ export class CommentService {
       take: 10,
       skip: page === undefined ? 0 : (page-1) * 10
     });
+    return result
     
   }
 
@@ -301,6 +303,9 @@ export class CommentService {
       .innerJoinAndSelect('cafeinfo.owner','owner')
       .where('cafeTag.tagName In (:...Tags)',{Tags})
       .andWhere('cafeinfo.cafeAddr Like:Location OR cafeinfo.detailAddr Like:Location',{Location : `%${Location}%`})
+      .take(10)
+      .skip(page === undefined ? 0 : (page-1) * 10)
+      .getMany()
     } else {
       const result = await this.findAll({ page });
       return result;
