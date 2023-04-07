@@ -13,21 +13,19 @@ export class PickListService {
 
   async find({ userID, page, Location }) {
     if (Location) {
-      const result = await this.pickListRepository.find({
-        relations: [
-          'user',
-          'cafeInform',
-          'cafeInform.cafeTag',
-          'cafeInform.owner',
-          'cafeInform.cafeImage',
-        ],
-        where: {
-          user: { id: userID },
-          cafeInform: { cafeAddr: Like(`%${Location}%`) },
-        },
-        take: 10,
-        skip: page === undefined ? 1 : (page - 1) * 10,
-      });
+
+      const result = await this.pickListRepository
+      .createQueryBuilder('pick')
+      .innerJoinAndSelect('pick.user', 'user','user.id = :userID',{userID})
+      .innerJoinAndSelect('pick.cafeInform','cafeInform')
+      .innerJoinAndSelect('pick.cafeInform.cafeTag','cafeTag')
+      .innerJoinAndSelect('pick.cafeInorm.owner','owner')
+      .innerJoinAndSelect('pick.cafeInform.cafeImage','cafeImage')
+      .where('cafeInform.cafeAddr Like :Location OR cafeInform.detailAddr Like :Location', {Location : `%${Location}%`})
+      .take(10)
+      .skip(page === undefined ? 0 : (page-1) * 10)
+      .getMany()
+      
 
       return result;
     } else {

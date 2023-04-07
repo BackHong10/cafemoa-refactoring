@@ -45,41 +45,28 @@ export class StampService {
 
   async findUserStamp({ userId, page, location }) {
     if (location) {
-      const result = await this.stampRepository.find({
-        take: 10,
-        skip: page === undefined ? 1 : (page - 1) * 10,
-        where: { user: { id: userId } },
-        relations: ['user', 'cafeInform', 'cafeInform.owner'],
-      });
-      const answer = result.filter(
-        (el) => el.cafeInform.cafeAddr.includes(location) && el.count !== 0,
-      );
-      if (answer.length > 10) {
-        const pageNum = Math.ceil(answer.length / 10);
-        const result = new Array(pageNum);
-        for (let i = 0; i < pageNum; i++) {
-          result[i] = answer.slice(i * 10, (i + 1) * 10);
-        }
-        return result[page - 1];
-      }
-      return answer;
+      
+
+      const result = await this.stampRepository.createQueryBuilder('stamp')
+      .innerJoinAndSelect('stamp.user','user', 'user.id = :userId',{userId})
+      .innerJoinAndSelect('stamp.cafeInform','cafeInform')
+      .innerJoinAndSelect('stamp.cafeInform.owner','owner')
+      .where('cafeInform.cafeAddr Like: location OR cafeInform.detailAddr Like :location', {location : `%${location}%`})
+      .take(10)
+      .skip(page === undefined ? 0 : (page-1) * 10)
+      .getMany()
+
+      return result
+      
     } else {
       const result = await this.stampRepository.find({
         take: 10,
-        skip: page === undefined ? 1 : (page - 1) * 10,
+        skip: page === undefined ? 0 : (page - 1) * 10,
         where: { user: { id: userId } },
         relations: ['user', 'cafeInform', 'cafeInform.owner'],
       });
-      const answer = result.filter((el) => el.count !== 0);
-      if (answer.length > 10) {
-        const pageNum = Math.ceil(answer.length / 10);
-        const result = new Array(pageNum);
-        for (let i = 0; i < pageNum; i++) {
-          result[i] = answer.slice(i * 10, (i + 1) * 10);
-        }
-        return result[page - 1];
-      }
-      return answer;
+      
+      return result;
     }
   }
 

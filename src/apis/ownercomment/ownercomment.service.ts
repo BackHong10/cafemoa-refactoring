@@ -18,7 +18,7 @@ export class OwnerCommentService {
   async findAll({ page }) {
     return await this.ownercommentRepository.find({
       take: 10,
-      skip: page === undefined ? 1 : (page - 1) * 10,
+      skip: page === undefined ? 0 : (page - 1) * 10,
       relations: ['comment', 'owner'],
     });
   }
@@ -104,7 +104,7 @@ export class OwnerCommentService {
   async findById({ OwnerID, page }) {
     const result = await this.ownercommentRepository.find({
       take: 10,
-      skip: page === undefined ? 1 : (page - 1) * 10,
+      skip: page === undefined ? 0 : (page - 1) * 10,
       where: {
         owner: { id: OwnerID },
       },

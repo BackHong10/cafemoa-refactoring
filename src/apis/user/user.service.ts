@@ -88,16 +88,16 @@ export class UserService {
 
   async findCouponUser({ phone, page }) {
     if (phone) {
-      return await this.userRepository.find({
+      return this.userRepository.find({
         where: { phone: Like(`%%${phone}`) },
         take: 10,
-        skip: (page - 1) * 10,
+        skip: page === undefined ? 0 : (page-1) * 10,
       });
     } else {
-      return await this.userRepository.find({
+      return this.userRepository.find({
         where: { phone },
         take: 10,
-        skip: (page - 1) * 10,
+        skip: page === undefined ? 0 : (page-1) * 10,
       });
     }
   }
@@ -117,7 +117,7 @@ export class UserService {
       password = await bcrypt.hash(password, 10);
     }
 
-    return await this.userRepository.save({
+    return this.userRepository.save({
       ...result,
       password,
       ...user,

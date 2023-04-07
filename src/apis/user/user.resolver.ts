@@ -42,7 +42,7 @@ export class UserResolver {
     @Args({ name: 'phone', type: () => String, nullable: true }) phone: string,
     @Args({ name: 'page', type: () => Int, nullable: true }) page: number,
   ) {
-    page = page === undefined ? 1 : page;
+    
     return this.userService.findCouponUser({ phone, page });
   }
 
@@ -52,7 +52,7 @@ export class UserResolver {
     @Context() context: IContext,
     @Args('updateUserInput') updateUserInput: UpdateUserInput, //
   ) {
-    return await this.userService.update({
+    return this.userService.update({
       updateUserInput,
       context,
     });

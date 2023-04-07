@@ -4,7 +4,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import { Owner } from '../owner/entities/owner.entity';
 import { StampHistory } from './entities/stamphistory.entity';
 import * as bcrypt from 'bcrypt';
@@ -31,28 +31,17 @@ export class StampHistoryService {
     const cafeStamp = await this.stampHistoryRepository.find({
       where: {
         owner: { id: ownerId },
+        count : MoreThan(3)
       },
       order: {
         createdAt: 'ASC',
       },
       take: 10,
-      skip: page === undefined ? 1 : (page - 1) * 10,
+      skip: page === undefined ? 0 : (page - 1) * 10,
       relations: ['stamp', 'owner', 'user', 'stamp.cafeInform'],
     });
 
-    const result = cafeStamp.filter((el) => {
-      if (el.count > 3) return true;
-    });
-
-    if (result.length > 10) {
-      const pageNum = Math.ceil(result.length / 10);
-      const result10 = new Array(pageNum);
-      for (let i = 0; i < pageNum; i++) {
-        result10[i] = result.slice(i * 10, (i + 1) * 10);
-      }
-      return result10[page - 1];
-    }
-    return result;
+    return cafeStamp;
   }
 
   async delete({ ownerpassword, stamphistoryId }) {
