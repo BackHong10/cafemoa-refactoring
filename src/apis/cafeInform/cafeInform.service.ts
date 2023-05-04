@@ -382,18 +382,7 @@ export class CafeInformService {
     }
   }
 
-  // async test(location,tags){
-  //   return this.cafeInformrRepository
-  //     .createQueryBuilder('cafeInform')
-  //     .innerJoinAndSelect('cafeInform.cafeTag','cafeTag')
-  //     .innerJoinAndSelect('cafeInform.owner','owner')
-  //     .innerJoinAndSelect('cafeInform.cafeImage','cafeImage')
-  //     .innerJoinAndSelect('cafeInform.cafeMenuImage','cafeMenuImage')
-  //     .where('cafeInform.cafeAddr Like :location',{location : `%${location}%`})
-  //     .orWhere('cafeInform.detailAddr Like :location',{location : `%${location}%`})
-  //     .andWhere('cafeTag.tagName In (:...tags)',{tags})
-  //     .getMany()
-  // }
+
 
   async findMyCafes({ ownerID, page }) {
     const result = await this.cafeInformrRepository.find({
@@ -435,6 +424,11 @@ export class CafeInformService {
       .innerJoinAndSelect('cafeInform.owner','owner')
       .innerJoinAndSelect('cafeInform.cafeImage','cafeImage')
       .innerJoinAndSelect('cafeInform.cafeMenuImage','cafeMenuImage')
+      .where('owner.brandName Like :name',{name: `%${name}%`})
+      .andWhere('cafeInform.cafeAddr Like :Location OR cafeInform.detailAddr Like :Location',{Location : `%${Location}%`})
+      .take(10)
+      .skip((page-1) * 10)
+      .getMany()
 
     } else {
       const result = await this.findAll({ page });
